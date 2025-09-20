@@ -1,0 +1,32 @@
+# Source files
+src/
+tests/
+benchmarks/
+
+# Config files
+.eslintrc.json
+.prettierrc
+.gitignore
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+
+# Development files
+*.log
+*.map
+.DS_Store
+coverage/
+.nyc_output/
+.github/
+docs/
+scripts/
+
+# IDE
+.vscode/
+.idea/
+
+# Build artifacts not needed
+*.tsbuildinfo
+
+# Keep only dist
+!dist/
