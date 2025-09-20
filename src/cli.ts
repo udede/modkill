@@ -36,7 +36,7 @@ export async function runCli(argv: string[] = process.argv): Promise<void> {
   program
     .name('modkill')
     .description('Find and remove node_modules to free disk space safely')
-    .version('0.0.1')
+    .version('0.1.0')
     .option('--auto', 'Auto-clean old modules (>30 days)')
     .option('--dry-run', 'Preview without deleting')
     .option('--current', 'Clean current directory only')
