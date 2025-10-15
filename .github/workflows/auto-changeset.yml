@@ -1,0 +1,173 @@
+name: Auto Changeset
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-changeset:
+    name: Generate Changeset
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check conditions
+        id: check
+        run: |
+          # Check if changeset already exists
+          CHANGESETS=$(ls .changeset/*.md 2>/dev/null | grep -v README.md | wc -l | tr -d ' ')
+          echo "changeset_exists=$CHANGESETS" >> $GITHUB_OUTPUT
+          
+          # Check if source files changed
+          CHANGED=$(git diff --name-only origin/main...HEAD | grep '^src/' | grep -v '\.test\.' || echo "")
+          if [ -n "$CHANGED" ]; then
+            echo "src_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "src_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate with AI
+        if: steps.check.outputs.changeset_exists == '0' && steps.check.outputs.src_changed == 'true'
+        id: ai
+        uses: actions/github-script@v7
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+            
+            const apiKey = process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY;
+            
+            // Skip if no API key
+            if (!apiKey) {
+              core.warning('No AI API key - please add changeset manually');
+              return;
+            }
+            
+            // Get minimal info
+            const commits = execSync('git log origin/main..HEAD --format="%s"').toString().slice(0, 300);
+            const files = execSync('git diff --name-only origin/main...HEAD').toString().slice(0, 400);
+            
+            // Ultra-minimal prompt (save tokens)
+            const prompt = `Files: ${files}\nCommits: ${commits}\n\nClassify: patch|minor|major\nDescribe in 1 sentence what users can do.\nJSON: {"type":"...","description":"..."}`;
+            
+            let result;
+            try {
+              if (process.env.ANTHROPIC_API_KEY) {
+                const res = await fetch('https://api.anthropic.com/v1/messages', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': process.env.ANTHROPIC_API_KEY,
+                    'anthropic-version': '2023-06-01'
+                  },
+                  body: JSON.stringify({
+                    model: 'claude-3-5-haiku-20241022',
+                    max_tokens: 150,
+                    messages: [{ role: 'user', content: prompt }]
+                  })
+                });
+                
+                if (res.status === 429) {
+                  core.warning('AI rate limited - please add changeset manually');
+                  return;
+                }
+                if (!res.ok) {
+                  core.warning(`AI error ${res.status} - please add changeset manually`);
+                  return;
+                }
+                
+                const data = await res.json();
+                const text = data.content[0].text.replace(/```json|```/g, '').trim();
+                result = JSON.parse(text);
+              } else {
+                const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+                  },
+                  body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: 150,
+                    temperature: 0.2
+                  })
+                });
+                
+                if (res.status === 429) {
+                  core.warning('AI rate limited - please add changeset manually');
+                  return;
+                }
+                if (!res.ok) {
+                  core.warning(`AI error ${res.status} - please add changeset manually`);
+                  return;
+                }
+                
+                const data = await res.json();
+                result = JSON.parse(data.choices[0].message.content);
+              }
+              
+              // Validate and sanitize
+              if (!result || !result.type || !result.description) {
+                core.warning('Invalid AI response - please add changeset manually');
+                return;
+              }
+              
+              const type = ['patch', 'minor', 'major'].includes(result.type) ? result.type : 'patch';
+              const desc = result.description.slice(0, 200).trim();
+              
+              // Create changeset file
+              const content = `---\n'@lisandrof/modkill': ${type}\n---\n\n${desc}\n`;
+              const filename = `.changeset/ai-${Date.now()}.md`;
+              fs.writeFileSync(filename, content);
+              
+              // Commit and push
+              execSync('git config user.name "github-actions[bot]"');
+              execSync('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"');
+              execSync(`git add ${filename}`);
+              execSync('git commit -m "chore: add AI changeset [skip ci]"');
+              execSync('git push');
+              
+              // Comment on PR
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `🤖 **AI generated changeset**\n\n✨ **Type:** \`${type}\`\n📝 **What's new:** ${desc}\n\n_Review \`${filename}\` and edit if needed_`
+              });
+              
+              core.info('✅ Changeset generated successfully');
+              
+            } catch (error) {
+              core.warning(`AI failed: ${error.message} - Please add changeset manually`);
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `⚠️ **Changeset needed**\n\nAI generation failed. Please run:\n\`\`\`bash\nnpm run changeset\n\`\`\``
+              });
+            }
+
+      - name: Skip info
+        if: steps.check.outputs.changeset_exists != '0' || steps.check.outputs.src_changed == 'false'
+        run: |
+          if [ "${{ steps.check.outputs.changeset_exists }}" != "0" ]; then
+            echo "✅ Changeset already exists"
+          else
+            echo "ℹ️ No source code changes"
+          fi
+

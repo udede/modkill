@@ -1,327 +1,259 @@
-# 📦 Release Process (Automated with GitHub Actions)
+# 📦 Release Process (100% Automatico con AI)
 
-This project uses **automated releases** via GitHub Actions and [changesets](https://github.com/changesets/changesets).
+## 🤖 **Sistema Completamente Automatico**
 
-## 🎯 TL;DR - For Contributors
-
-1. Make your changes
-2. Run `npm run changeset` to describe your changes
-3. Commit and push (including the changeset file)
-4. Open a PR
-5. **That's it!** Release happens automatically when PR is merged ✨
-
----
-
-## 🤖 How Automation Works
-
-### 1️⃣ **When You Push Changes to a PR**
-
-GitHub Actions runs automatically:
-
-- ✅ Runs tests on Node 18, 20, 22
-- ✅ Tests on Linux, macOS, Windows
-- ✅ Checks linting and types
-- ✅ Generates coverage report
-
-### 2️⃣ **When PR is Merged to Main**
-
-The **Changesets Bot** automatically:
-
-1. Detects changeset files
-2. Creates/updates a **"Release PR"** that:
-   - Bumps version in `package.json`
-   - Updates `CHANGELOG.md`
-   - Deletes changeset files
-
-### 3️⃣ **When Release PR is Merged**
-
-GitHub Actions automatically:
-
-1. Runs full test suite
-2. Builds the package
-3. **Publishes to npm** 🚀
-4. Creates a GitHub Release
-5. Tags the commit
-
-**You never run `npm publish` manually!** 🎉
-
----
-
-## 📝 Creating a Changeset
-
-When you make changes that affect users, create a changeset:
+### **Per TE (Maintainer):**
 
 ```bash
-npm run changeset
+# Fai modifiche
+vim src/core/scanner.ts
+
+# Committa e pusha
+git commit -am "feat: cool feature"
+git push
+
+# FATTO! 🎉
+# AI genera changeset automaticamente
 ```
 
-### Interactive Prompts
+### **Per CONTRIBUTORS:**
 
-**1. What type of change?**
+```bash
+# Apri PR
+git push
 
-```
-? Which packages would you like to include?
-  ◉ @lisandrof/modkill
-```
-
-**2. Semver bump type:**
-
-```
-? What kind of change is this for @lisandrof/modkill?
-  ○ patch   - Bug fix (0.1.0 → 0.1.1)
-  ◉ minor   - New feature (0.1.0 → 0.2.0)
-  ○ major   - Breaking change (0.1.0 → 1.0.0)
+# FATTO! 🎉  
+# AI genera changeset automaticamente sulla PR
 ```
 
-**3. Summary:**
+### **Per PUBBLICARE:**
 
+```bash
+# Vai su GitHub
+# Merge "Release PR" (creata dal bot)
+# FATTO! 🎉
+# Pubblica automaticamente su npm
 ```
-? Please enter a summary for this change
-  Added support for custom trash directories
-```
 
-This creates a file: `.changeset/random-name-abc123.md`
-
-**Commit this file with your changes!**
+**Zero sforzo manuale!** 🚀
 
 ---
 
-## 🔄 Complete Workflow Example
+## 🔄 **Workflow Completo**
 
-```bash
-# 1. Create feature branch
-git checkout -b feat/custom-trash-dir
+```
+1. Developer → Push codice
+   ↓
+2. CI → Test automatici
+   ↓
+3. AI → Analizza modifiche
+   ├─ Detecta tipo (patch/minor/major)
+   ├─ Genera descrizione user-friendly
+   └─ Crea changeset automaticamente
+   ↓
+4. Bot → Aggiorna "Release PR"
+   ├─ Accumula changesets
+   └─ Aggiorna CHANGELOG preview
+   ↓
+5. Maintainer → Merge "Release PR"
+   ↓
+6. GitHub Actions → Pubblica
+   ├─ Version bump
+   ├─ npm publish 🚀
+   └─ GitHub Release
 
-# 2. Make your changes
-# ... code code code ...
-
-# 3. Create changeset
-npm run changeset
-# Select: minor
-# Write: "Added support for custom trash directories"
-
-# 4. Commit everything (including .changeset/*.md)
-git add .
-git commit -m "feat: add custom trash directory support"
-
-# 5. Push and open PR
-git push origin feat/custom-trash-dir
-# Open PR on GitHub
-
-# 6. After PR is reviewed and merged...
-# The bot automatically creates a "Release PR"
-
-# 7. Maintainer merges the "Release PR"
-# → Package is automatically published to npm! 🎉
+Total effort: 1 click! ✅
 ```
 
 ---
 
-## 🏗️ Version Types Explained
+## ⚙️ **Setup (Una Volta)**
 
-### Patch (0.1.0 → 0.1.1)
+### **1. Configura AI API Key su GitHub**
 
-Bug fixes, documentation, internal improvements:
+**Opzione A: Anthropic (Raccomandato)**
+- Vai su: https://console.anthropic.com/
+- Crea API key
+- GitHub → Settings → Secrets → `ANTHROPIC_API_KEY`
 
-```bash
-npm run changeset
-# Select: patch
-```
+**Opzione B: OpenAI**
+- Vai su: https://platform.openai.com/api-keys
+- Crea API key
+- GitHub → Settings → Secrets → `OPENAI_API_KEY`
 
-**Examples:**
+**Costo:** ~$0.002 per PR (quasi gratis!)
 
-- Fixed crash when scanning system directories
-- Updated README examples
-- Improved error messages
+### **2. Configura NPM Token**
 
-### Minor (0.1.0 → 0.2.0)
+- npm: `npm token create` (scegli "Automation")
+- GitHub → Settings → Secrets → `NPM_MODKILL_TOKEN`
 
-New features (backwards compatible):
+### **3. Done!**
 
-```bash
-npm run changeset
-# Select: minor
-```
-
-**Examples:**
-
-- Added `--exclude` flag
-- New JSON output format
-- Support for pnpm workspaces
-
-### Major (0.1.0 → 1.0.0)
-
-Breaking changes:
-
-```bash
-npm run changeset
-# Select: major
-```
-
-**Examples:**
-
-- Changed CLI argument names
-- Removed deprecated flags
-- Changed output format
+Tutto il resto è automatico! 🎊
 
 ---
 
-## 🔧 Setup for Maintainers
+## 🛡️ **Gestione Fallimenti**
 
-### Required GitHub Secrets
+### **Se AI Non Funziona** (no fondi, rate limit, errore)
 
-In your GitHub repo settings (`Settings → Secrets and variables → Actions`), add:
+1. **AI fallisce** → GitHub commenta sulla PR
+2. **Messaggio:** "Please run: `npm run changeset`"
+3. **Tu esegui manuale** (fallback sicuro)
+4. **Continua normalmente**
 
-#### 1. `NPM_TOKEN` (Required for publishing)
-
-Get your npm token:
-
-```bash
-npm login
-npm token create --cidr=0.0.0.0/0
-```
-
-Or on [npmjs.com](https://www.npmjs.com/settings/YOUR_USERNAME/tokens):
-
-- Click "Generate New Token"
-- Choose "Automation"
-- Copy the token
-
-Add to GitHub:
-
-- Name: `NPM_TOKEN`
-- Value: `npm_xxxxxxxxxxxxxxxxxxxx`
-
-#### 2. `CODECOV_TOKEN` (Optional - for coverage reports)
-
-Get from [codecov.io](https://codecov.io/) after connecting your repo.
-
-### Verify Automation is Working
-
-1. **Push a test change** with a changeset
-2. **Check GitHub Actions** tab - CI should run
-3. **Merge a PR** - Release PR should be created
-4. **Merge Release PR** - Package should publish
+**Mai bloccato!** Il sistema ha sempre un piano B.
 
 ---
 
-## 📊 What Gets Generated
+## 💡 **Come Funziona l'AI**
 
-### `.changeset/*.md` Files
+### **Cosa Analizza:**
+- File modificati
+- Commit messages
+- Tipo di modifica (API, logic, fix)
 
-Temporary change descriptions:
-
-```md
+### **Cosa Genera:**
+```markdown
 ---
 '@lisandrof/modkill': minor
 ---
 
-Added support for custom trash directories
+Added support for excluding directories
 ```
 
-### CHANGELOG.md
+### **Smart Detection:**
+- Nuovi export → `minor`
+- Bug fix → `patch`
+- API changes → `major`
+- Solo docs/test → skip
 
-Auto-generated from changesets:
+---
 
-```md
-## 0.2.0
+## 📊 **Esempio Reale**
 
-### Minor Changes
+### **Tu fai:**
+```bash
+# 1. Fix bug
+vim src/core/scanner.ts
+git commit -m "fix: handle symlinks"
+git push
+```
 
-- Added support for custom trash directories
+### **AI genera automaticamente:**
+```markdown
+---
+'@lisandrof/modkill': patch
+---
+
+Fixed crash when scanning symbolic links
+```
+
+### **Bot crea/aggiorna Release PR:**
+```markdown
+## 0.1.1
 
 ### Patch Changes
-
-- Fixed crash when scanning system directories
-- Updated README examples
+- Fixed crash when scanning symbolic links
 ```
 
-### GitHub Release
-
-Automatically created with:
-
-- Version tag (e.g., `v0.2.0`)
-- Release notes from CHANGELOG
-- Link to npm package
+### **Tu mergi Release PR → Pubblicato!** 🚀
 
 ---
 
-## 🚫 What NOT to Do
+## 🎯 **Opzioni Avanzate**
 
-❌ **Don't manually edit `CHANGELOG.md`** - it's auto-generated
-❌ **Don't manually bump `package.json` version** - changesets handles it
-❌ **Don't run `npm publish`** - GitHub Actions does it
-❌ **Don't commit `node_modules/`** or `dist/` - they're gitignored
-❌ **Don't skip creating changesets** - they're required for releases
+### **AI Locale (Opzionale)**
 
----
+Se vuoi generare changeset in locale:
 
-## ✅ Checklist for Contributors
+```bash
+# Setup
+export ANTHROPIC_API_KEY=sk-ant-...
 
-Before opening a PR, ensure:
+# Usa
+npm run changeset:ai
+```
 
-- [ ] Code changes are complete
-- [ ] Tests pass (`npm test`)
-- [ ] Linting passes (`npm run lint`)
-- [ ] Types are correct (`npm run typecheck`)
-- [ ] **Changeset created** (`npm run changeset`)
-- [ ] Changeset file committed (`.changeset/*.md`)
-- [ ] PR description explains the change
+### **Disabilitare AI**
 
----
+Se preferisci manuale:
 
-## 🆘 Troubleshooting
+```bash
+# Crea sempre changeset manualmente
+npm run changeset
 
-### "Release PR not created"
-
-**Cause:** No changesets were merged
-**Fix:** Make sure you committed the `.changeset/*.md` file
-
-### "npm publish failed"
-
-**Causes:**
-
-1. `NPM_TOKEN` secret not set
-2. Token expired or invalid
-3. Version already published
-
-**Fix:** Check GitHub Actions logs for details
-
-### "Tests failed in CI but pass locally"
-
-**Causes:**
-
-- Platform-specific issue (Windows vs Mac vs Linux)
-- Node version difference
-- Missing dependency
-
-**Fix:** Check the failing matrix combination in Actions logs
-
-### "Can't merge Release PR"
-
-**Cause:** CI checks haven't passed
-**Fix:** Wait for checks to complete or fix failing tests
+# AI non sovrascriverà (detecta esistente)
+```
 
 ---
 
-## 📚 Learn More
+## 🚨 **Troubleshooting**
 
-- [Changesets Documentation](https://github.com/changesets/changesets)
-- [GitHub Actions](https://docs.github.com/en/actions)
-- [Semantic Versioning](https://semver.org/)
-- [npm Publishing](https://docs.npmjs.com/cli/v8/commands/npm-publish)
+### "AI non genera changeset"
+
+**Possibili cause:**
+1. ❌ API key non configurata → Aggiungi `ANTHROPIC_API_KEY` secret
+2. ❌ No fondi API → Ricarica o usa fallback manuale
+3. ❌ Solo modifiche test/docs → Corretto, skip automatico
+4. ✅ Changeset già esiste → Corretto, skip automatico
+
+**Soluzione:** GitHub commenta sempre cosa fare!
+
+### "Changeset wrong type"
+
+**Soluzione:**
+```bash
+# Modifica il file
+vim .changeset/ai-*.md
+# Cambia type o description
+git commit --amend
+git push --force
+```
 
 ---
 
-## 🎉 Benefits of This Setup
+## 📋 **Best Practices**
 
-✅ **No manual version bumps** - automated
-✅ **Consistent changelog** - generated from changesets
-✅ **Multiple contributors** - everyone can trigger releases
-✅ **Rollback friendly** - git history shows exact changes
-✅ **CI/CD integrated** - tests before every release
-✅ **Transparent** - all releases visible in PRs
+✅ **Lascia AI gestire** routine changes (90% dei casi)
+✅ **Review changeset** generati prima del merge Release PR  
+✅ **Edit se necessario** - sono solo file markdown
+✅ **Usa manuale per breaking changes** complessi
 
 ---
 
-**Questions?** Check [CONTRIBUTING.md](.github/CONTRIBUTING.md) or open an issue!
+## 💰 **Costi**
+
+- **Anthropic Haiku:** ~$0.001/changeset
+- **OpenAI GPT-4o-mini:** ~$0.002/changeset
+
+**Per 100 PR/mese:** <$0.20 ☕
+
+**Free tier Anthropic:** $5 credit = ~5000 changesets! 🎉
+
+---
+
+## 🎊 **Risultato Finale**
+
+### **Prima (Manuale):**
+```bash
+git commit -m "feat: X"
+npm run changeset  ← Manual
+# Rispondi prompt    ← Manual
+# Scrivi descrizione ← Manual
+git push
+```
+
+### **Ora (Automatico):**
+```bash
+git commit -m "feat: X"
+git push
+
+# AI fa tutto! 🤖
+# Solo merge Release PR quando pronto! ✨
+```
+
+---
+
+**Domande?** Vedi [AI_CHANGESET.md](AI_CHANGESET.md) per dettagli!
