@@ -5,10 +5,6 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/udede/modkill/main/assets/demo.gif" alt="modkill demo" width="600" />
-</p>
-
-<p align="center">
   <a href="https://www.npmjs.com/package/@lisandrof/modkill"><img src="https://img.shields.io/npm/v/%40lisandrof%2Fmodkill?style=flat-square&logo=npm" alt="npm version"></a>
   <a href="https://www.npmjs.com/package/@lisandrof/modkill"><img src="https://img.shields.io/npm/dm/%40lisandrof%2Fmodkill?style=flat-square&logo=npm" alt="downloads"></a>
   <a href="https://github.com/udede/modkill/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/udede/modkill/ci.yml?branch=main&style=flat-square&logo=github&label=tests" alt="tests"></a>
