@@ -7,11 +7,8 @@ import { mkdtemp, mkdir, writeFile, rm, utimes, access } from 'node:fs/promises'
 import path from 'node:path';
 import os from 'node:os';
 
-// Mock console methods
-const consoleSpy = {
-  log: vi.spyOn(console, 'log').mockImplementation(() => {}),
-  error: vi.spyOn(console, 'error').mockImplementation(() => {}),
-};
+// Mock stdout.write (logger uses this instead of console.log)
+const stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
 
 // Mock inquirer
 vi.mock('inquirer', () => ({
@@ -30,19 +27,25 @@ describe('Commands Integration Tests', () => {
 
   beforeEach(async () => {
     testDir = await mkdtemp(path.join(os.tmpdir(), 'modkill-cmd-test-'));
-    consoleSpy.log.mockClear();
-    consoleSpy.error.mockClear();
+    stdoutSpy.mockClear();
   });
 
   afterEach(async () => {
     await rm(testDir, { recursive: true, force: true });
   });
 
+  // Helper to get captured output from stdout.write calls
+  const getOutput = () => {
+    return stdoutSpy.mock.calls
+      .map(call => String(call[0]))
+      .join('');
+  };
+
   describe('Interactive Command', () => {
     it('handles no modules found', async () => {
       await runInteractiveCommand({ path: testDir });
       
-      const output = consoleSpy.log.mock.calls.flat().join('\n');
+      const output = getOutput();
       expect(output).toContain('No node_modules found');
     });
 
@@ -52,7 +55,7 @@ describe('Commands Integration Tests', () => {
       
       await runInteractiveCommand({ path: testDir, json: true });
       
-      const output = consoleSpy.log.mock.calls.flat().join('');
+      const output = getOutput();
       const parsed = JSON.parse(output);
       expect(Array.isArray(parsed)).toBe(true);
       expect(parsed[0]).toHaveProperty('path');
@@ -74,7 +77,7 @@ describe('Commands Integration Tests', () => {
         json: true 
       });
       
-      const output = consoleSpy.log.mock.calls.flat().join('');
+      const output = getOutput();
       const parsed = JSON.parse(output);
       expect(parsed.length).toBeGreaterThan(0);
       expect(parsed[0].ageDays).toBeGreaterThan(90);
@@ -91,7 +94,7 @@ describe('Commands Integration Tests', () => {
         json: true 
       });
       
-      const output = consoleSpy.log.mock.calls.flat().join('');
+      const output = getOutput();
       const parsed = JSON.parse(output);
       expect(parsed.length).toBeGreaterThan(0);
       expect(parsed[0].sizeBytes).toBeGreaterThan(500000);
@@ -112,7 +115,7 @@ describe('Commands Integration Tests', () => {
         dryRun: true // Don't actually delete in tests
       });
       
-      const output = consoleSpy.log.mock.calls.flat().join('\n');
+      const output = getOutput();
       expect(output).toContain('Auto-clean complete');
     });
 
@@ -130,7 +133,7 @@ describe('Commands Integration Tests', () => {
         json: true
       });
       
-      const output = consoleSpy.log.mock.calls.flat().join('');
+      const output = getOutput();
       const parsed = JSON.parse(output);
       expect(parsed).toHaveLength(0);
     });
@@ -144,7 +147,7 @@ describe('Commands Integration Tests', () => {
       
       await runDryRunCommand({ path: testDir });
       
-      const output = consoleSpy.log.mock.calls.flat().join('\n');
+      const output = getOutput();
       expect(output).toContain('Total potential to free');
       expect(output).toContain(nmPath);
       
@@ -169,7 +172,7 @@ describe('Commands Integration Tests', () => {
         json: true
       });
       
-      const output = consoleSpy.log.mock.calls.flat().join('');
+      const output = getOutput();
       const parsed = JSON.parse(output);
       
       expect(parsed[0].sizeBytes).toBeGreaterThan(parsed[1].sizeBytes);
@@ -184,7 +187,7 @@ describe('Commands Integration Tests', () => {
       
       await runCurrentCommand({ dryRun: true });
       
-      const output = consoleSpy.log.mock.calls.flat().join('\n');
+      const output = getOutput();
       expect(output).toContain('Deleted: 0, Skipped: 1');
     });
 
@@ -192,7 +195,7 @@ describe('Commands Integration Tests', () => {
       // Skipped: process.chdir() not supported in Vitest workers
       await runCurrentCommand({});
       
-      const output = consoleSpy.log.mock.calls.flat().join('\n');
+      const output = getOutput();
       expect(output).toContain('No node_modules in current directory');
     });
   });

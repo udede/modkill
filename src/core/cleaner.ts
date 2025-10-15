@@ -2,7 +2,7 @@ import { rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import trash from 'trash';
-import { calculateDirectorySize } from '../utils/fs.utils.js';
+import { calculateDirectorySize } from '../utils/fs.utils';
 
 export interface DeleteOptions {
   dryRun?: boolean;

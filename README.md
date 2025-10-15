@@ -5,11 +5,14 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@lisandrof/modkill"><img src="https://img.shields.io/npm/v/modkill.svg" alt="npm version"></a>
-  <a href="https://www.npmjs.com/package/@lisandrof/modkill"><img src="https://img.shields.io/npm/dm/modkill.svg" alt="npm downloads"></a>
-  <a href="https://github.com/udede/modkill/actions"><img src="https://github.com/udede/modkill/actions/workflows/ci.yml/badge.svg" alt="CI Status"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
-  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg" alt="Node Version"></a>
+  <a href="https://www.npmjs.com/package/@lisandrof/modkill"><img src="https://img.shields.io/npm/v/%40lisandrof%2Fmodkill.svg?style=flat-square" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@lisandrof/modkill"><img src="https://img.shields.io/npm/dm/%40lisandrof%2Fmodkill.svg?style=flat-square" alt="npm downloads"></a>
+  <a href="https://github.com/udede/modkill/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/udede/modkill/ci.yml?style=flat-square&label=CI" alt="CI Status"></a>
+  <a href="https://codecov.io/gh/udede/modkill"><img src="https://img.shields.io/codecov/c/github/udede/modkill?style=flat-square" alt="Coverage"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License"></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg?style=flat-square" alt="Node Version"></a>
+  <a href="https://github.com/udede/modkill/issues"><img src="https://img.shields.io/github/issues/udede/modkill?style=flat-square" alt="Issues"></a>
+  <a href="https://github.com/udede/modkill"><img src="https://img.shields.io/github/stars/udede/modkill?style=flat-square" alt="Stars"></a>
 </p>
 
 <p align="center">
@@ -105,16 +108,16 @@ modkill --current
 
 ### Options
 
-| Option             | Type    | Default | Description                            |
-| ------------------ | ------- | ------- | -------------------------------------- |
-| `--path <dir>`     | string  | `.`     | Root directory to scan                 |
-| `--depth <n>`      | number  | `6`     | Max recursion depth                    |
-| `--min-age <days>` | number  | `0`     | Only show modules older than N days    |
-| `--min-size <mb>`  | number  | `0`     | Only show modules larger than N MB     |
-| `--sort <by>`      | string  | `size`  | Sort by: `size`, `age`, `name`, `path` |
-| `--json`           | boolean | `false` | Output JSON for scripting              |
-| `--yes`            | boolean | `false` | Skip confirmation prompts              |
-| `--help`           | boolean | `false` | Show help                              |
+| Option             | Type    | Default                                | Description                           |
+| ------------------ | ------- | -------------------------------------- | ------------------------------------- |
+| `--path <dir>`     | string  | `.`                                    | Root directory to scan                |
+| `--depth <n>`      | number  | `6`                                    | Max recursion depth                   |
+| `--min-age <days>` | number  | `0`                                    | Only show modules older than N days   |
+| `--min-size <mb>`  | number  | `0`                                    | Only show modules larger than N MB    |
+| `--sort <by>`      | string  | `score` (interactive), `size` (others) | One of: `size`, `age`, `name`, `path` |
+| `--json`           | boolean | `false`                                | Output JSON for scripting             |
+| `--yes`            | boolean | `false`                                | Skip confirmation prompts             |
+| `--help`           | boolean | `false`                                | Show help                             |
 
 ### Advanced Examples
 
@@ -131,7 +134,13 @@ modkill --dry-run --json --path ~ > report.json
 # Clean without confirmation
 modkill --current --yes
 
-# Deep scan of external drive
+# Free large modules first (interactive)
+modkill --path ~ --min-size 200
+
+# Focus on abandoned projects (oldest first)
+modkill --path ~ --sort age
+
+# Deep scan of an external drive
 modkill --path /Volumes/Backup --depth 10
 ```
 
@@ -163,6 +172,14 @@ modkill --path /Volumes/Backup --depth 10
 - ⚠️ Confirmation prompt before deletion
 - 🚫 Skips system directories automatically
 
+### How it decides
+
+- Filter: applies `--min-age` and `--min-size` when provided
+- Order (interactive default): combined weighting `sizeGB^0.7 × ageDays^0.3` (separate from JSON "score"). Use `--sort` to override
+- Order (auto / dry-run default): `size` (use `--sort` to override)
+- Pre-selection: items with `ageDays > 30`
+- Colors: 🟢 ≤30d, 🟡 31–60d, 🔴 >60d
+
 ## 📊 JSON Output Schema
 
 ```json
@@ -185,7 +202,7 @@ Fields:
 - `mtimeMs`: Last modified timestamp (milliseconds)
 - `hasPackageJson`: Whether parent has package.json
 - `ageDays`: Days since last modification
-- `score`: Calculated priority (0-100, higher = delete first)
+- `score`: Heuristic priority (0–100) used in analysis output; not the same as the interactive ordering function
 
 ## ⚡ Performance
 
@@ -275,20 +292,34 @@ npm run test:e2e
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
+We love contributions! This project uses **automated releases** with changesets.
+
+### Quick Start
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
-5. Open a Pull Request
+2. Create your feature branch (`git checkout -b feat/amazing-feature`)
+3. Make your changes
+4. Add tests for new features
+5. Create a changeset: `npm run changeset`
+6. Commit your changes (including the changeset file)
+7. Push and open a Pull Request
 
-### Development Guidelines
+For detailed guidelines, see:
 
-- Write tests for new features
-- Follow existing code style
-- Update documentation
-- Add yourself to contributors
+- 📖 [Contributing Guide](.github/CONTRIBUTING.md)
+- 🚀 [Release Process](RELEASE.md)
+- ⚙️ [Setup Guide](.github/SETUP.md) (for maintainers)
+
+### Automated Releases
+
+This project uses GitHub Actions for automated releases:
+
+- ✅ CI runs on every PR
+- ✅ Changesets bot creates release PRs automatically
+- ✅ Packages publish to npm automatically when release PR is merged
+- ✅ Changelog is auto-generated
+
+No manual `npm publish` needed! 🎉
 
 ## 📝 Changelog
 

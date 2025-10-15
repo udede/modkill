@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import chalk from 'chalk';
+import { createLogger } from './ui/logger';
 import { runInteractiveCommand } from './commands/interactive.command';
 import { runAutoCommand } from './commands/auto.command';
 import { runDryRunCommand } from './commands/dryrun.command';
@@ -30,7 +30,8 @@ function logo(): string {
 | $$ \\/  | $$|  $$$$$$/| $$$$$$$/| $$ \\  $$ /$$$$$$| $$$$$$$$| $$$$$$$$
 |__/     |__/ \\______/ |_______/ |__/  \\__/|______/|________/|________/
 `;
-  return chalk.cyan(text);
+  const logger = createLogger({ level: 'info', silent: true });
+  return logger.color.info(text);
 }
 
 export async function runCli(argv: string[] = process.argv): Promise<void> {
@@ -55,31 +56,32 @@ export async function runCli(argv: string[] = process.argv): Promise<void> {
   await program.parseAsync(argv);
   const opts = program.opts<CliOptions>();
 
+  const logger = createLogger({ level: opts.verbose ? 'debug' : 'info', json: !!opts.json });
   if (!opts.json) {
-    console.log(logo());
+    logger.raw(logo());
   }
 
   if (opts.current) {
-    await runCurrentCommand(opts);
+    await runCurrentCommand({ ...opts, logger });
     return;
   }
 
   if (opts.auto || opts.minAge !== undefined || opts.minSize !== undefined) {
-    await runAutoCommand(opts);
+    await runAutoCommand({ ...opts, logger });
     return;
   }
 
   if (opts.dryRun) {
-    await runDryRunCommand(opts);
+    await runDryRunCommand({ ...opts, logger });
     return;
   }
 
-  await runInteractiveCommand(opts);
+  await runInteractiveCommand({ ...opts, logger });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
+ 
 runCli().catch((err) => {
-  // eslint-disable-next-line no-console
-  console.error(chalk.red(String(err?.message || err)));
+  const logger = createLogger({ level: 'error' });
+  logger.error(String(err?.message || err));
   process.exitCode = 1;
 });

@@ -1,18 +1,19 @@
-import chalk from 'chalk';
 import prettyBytes from 'pretty-bytes';
 import { ModuleScanner } from '../core/scanner';
 import { Analyzer } from '../core/analyzer';
 import type { CliOptions } from '../cli';
 import type { SortBy } from '../core/analyzer';
-import { Progress } from '../ui/progress.ui';
+import type { Logger } from '../ui/logger';
+import { createLogger } from '../ui/logger';
 
-export async function runDryRunCommand(opts: CliOptions): Promise<void> {
+export async function runDryRunCommand(opts: CliOptions & { logger?: Logger }): Promise<void> {
+  const logger = opts.logger ?? createLogger({ level: opts.verbose ? 'debug' : 'info', json: !!opts.json });
   const root = opts.path || process.cwd();
   const scanner = new ModuleScanner();
   const scanOpts = { rootPath: root, ...(opts.depth !== undefined ? { depth: opts.depth } : {}) };
 
-  const spin = new Progress();
-  if (!opts.json) spin.start(`Scanning ${root}...`);
+  const spin = logger.spinner(`Scanning ${root}...`);
+  if (!opts.json) spin.start();
   const modules = await scanner.scan(scanOpts);
   if (!opts.json) spin.text('Analyzing modules...');
 
@@ -27,14 +28,14 @@ export async function runDryRunCommand(opts: CliOptions): Promise<void> {
   if (!opts.json) spin.succeed(`Scan complete: ${analyzed.length} candidate(s)`);
 
   if (opts.json) {
-    console.log(JSON.stringify(analyzed, null, 2));
+    logger.raw(JSON.stringify(analyzed, null, 2));
     return;
   }
 
   let total = 0;
   for (const m of analyzed) {
     total += m.sizeBytes;
-    console.log(`${m.path}  ${chalk.gray(prettyBytes(m.sizeBytes))}  ${chalk.gray(Math.floor(m.ageDays) + 'd')}`);
+    logger.info(`${m.path}  ${logger.color.dim(prettyBytes(m.sizeBytes))}  ${logger.color.dim(Math.floor(m.ageDays) + 'd')}`);
   }
-  console.log(chalk.blue(`Total potential to free: ${prettyBytes(total)}`));
+  logger.info(logger.color.info(`Total potential to free: ${prettyBytes(total)}`));
 }

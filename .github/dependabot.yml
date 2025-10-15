@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: 'chore'
+      prefix-development: 'chore'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'automated'
+    reviewers:
+      - 'udede'
+    assignees:
+      - 'udede'
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    commit-message:
+      prefix: 'ci'
+    labels:
+      - 'ci'
+      - 'automated'
