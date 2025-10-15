@@ -1,18 +1,20 @@
 # 🔪 modkill
 
 <p align="center">
+  <img src="https://raw.githubusercontent.com/udede/modkill/main/assets/logo.png" alt="modkill logo" width="200" />
+</p>
+
+<p align="center">
   <img src="https://raw.githubusercontent.com/udede/modkill/main/assets/demo.gif" alt="modkill demo" width="600" />
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@lisandrof/modkill"><img src="https://img.shields.io/npm/v/%40lisandrof%2Fmodkill.svg?style=flat-square" alt="npm version"></a>
-  <a href="https://www.npmjs.com/package/@lisandrof/modkill"><img src="https://img.shields.io/npm/dm/%40lisandrof%2Fmodkill.svg?style=flat-square" alt="npm downloads"></a>
-  <a href="https://github.com/udede/modkill/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/udede/modkill/ci.yml?style=flat-square&label=CI" alt="CI Status"></a>
-  <a href="https://codecov.io/gh/udede/modkill"><img src="https://img.shields.io/codecov/c/github/udede/modkill?style=flat-square" alt="Coverage"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License"></a>
-  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg?style=flat-square" alt="Node Version"></a>
-  <a href="https://github.com/udede/modkill/issues"><img src="https://img.shields.io/github/issues/udede/modkill?style=flat-square" alt="Issues"></a>
-  <a href="https://github.com/udede/modkill"><img src="https://img.shields.io/github/stars/udede/modkill?style=flat-square" alt="Stars"></a>
+  <a href="https://www.npmjs.com/package/@lisandrof/modkill"><img src="https://img.shields.io/npm/v/%40lisandrof%2Fmodkill?style=flat-square&logo=npm" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@lisandrof/modkill"><img src="https://img.shields.io/npm/dm/%40lisandrof%2Fmodkill?style=flat-square&logo=npm" alt="downloads"></a>
+  <a href="https://github.com/udede/modkill/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/udede/modkill/ci.yml?branch=main&style=flat-square&logo=github&label=tests" alt="tests"></a>
+  <a href="https://github.com/udede/modkill"><img src="https://img.shields.io/badge/coverage-73%25-green?style=flat-square" alt="coverage"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="license"></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square&logo=node.js" alt="node"></a>
 </p>
 
 <p align="center">
