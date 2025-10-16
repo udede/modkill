@@ -49,10 +49,14 @@ export class SafeCleaner {
         }
         deleted.push(p);
         freedBytes += size;
-      } catch (error: any) {
-        const errorCode = error?.code;
+      } catch (error: unknown) {
+        const errorCode = error && typeof error === 'object' && 'code' in error ? (error as { code?: string }).code : undefined;
         const reason = this.getErrorReason(errorCode);
-        skipped.push({ path: p, reason, errorCode });
+        const skippedItem: SkippedItem = { path: p, reason };
+        if (errorCode) {
+          skippedItem.errorCode = errorCode;
+        }
+        skipped.push(skippedItem);
       }
     }
 
