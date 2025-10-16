@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+### Minor Changes
+
+- 4c552f8: Users can now benefit from improved scan progress and error messages, along with enhanced deletion error handling in the cleaner.
+
 ## 0.1.1
 
 ### Patch Changes
