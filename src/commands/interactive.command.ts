@@ -39,7 +39,19 @@ export async function runInteractiveCommand(opts: CliOptions & { logger?: Logger
 
   const scanProgress = logger.spinner(`Scanning ${root}...`);
   if (!opts.json) scanProgress.start();
-  const modules = await scanner.scan(scanOpts);
+  const scanResult = await scanner.scan({
+    ...scanOpts,
+    onProgress: (currentPath: string, foundCount: number) => {
+      if (!opts.json) {
+        const relative = currentPath.replace(root, '').replace(/^\//, '');
+        const parts = relative.split('/').filter(Boolean);
+        const display = parts.length > 0 ? parts[parts.length - 1] : '';
+        if (display) {
+          scanProgress.text(`Scanning ${root}... ${logger.color.ok(`[${foundCount}]`)} ${logger.color.dim(display)}`);
+        }
+      }
+    }
+  });
   if (!opts.json) scanProgress.text('Analyzing modules...');
 
   const analyzer = new Analyzer();
@@ -49,16 +61,24 @@ export async function runInteractiveCommand(opts: CliOptions & { logger?: Logger
     ...(opts.minSize !== undefined ? { minSizeMB: opts.minSize } : {}),
     ...(sortByFlag ? { sortBy: sortByFlag } : {}),
   };
-  let analyzed = analyzer.analyze(modules, analyzeOpts);
+  let analyzed = analyzer.analyze(scanResult.modules, analyzeOpts);
 
   // Default interactive ordering: combined score (size^0.7 * age^0.3)
   if (!sortByFlag) {
     analyzed = analyzed.sort((a, b) => computeScore(b.sizeBytes, b.ageDays) - computeScore(a.sizeBytes, a.ageDays));
   }
 
-  if (!opts.json) scanProgress.succeed(`Scan complete: ${analyzed.length} candidate(s)`);
-  // Show root just below the scan summary (compact and grey)
-  if (!opts.json) logger.info(logger.color.dim(`📁 Scanning root: ${root}`));
+  if (!opts.json) {
+    const total = analyzed.length + scanResult.skippedNoPermission.length;
+    if (scanResult.skippedNoPermission.length === 0) {
+      scanProgress.succeed(`Scan complete: ${analyzed.length} candidate(s)`);
+    } else if (analyzed.length === 0) {
+      scanProgress.fail(`Found ${total} node_modules but none can be deleted (insufficient permissions)`);
+      logger.info('Try closing projects or running with elevated privileges.');
+    } else {
+      scanProgress.succeed(`Scan complete: ${analyzed.length} candidate(s), ${logger.color.warn(`${scanResult.skippedNoPermission.length} skipped (no permissions)`)}`);
+    }
+  }
 
   if (opts.json) {
     logger.raw(JSON.stringify(analyzed, null, 2));
@@ -178,7 +198,17 @@ export async function runInteractiveCommand(opts: CliOptions & { logger?: Logger
   progress.start();
   const res = await cleaner.delete(selected, { useTrash: true, dryRun: !!opts.dryRun });
   progress.succeed('Deletion complete');
-  logger.success(`Deleted: ${res.deleted.length}, Skipped: ${res.skipped.length}`);
+  
+  if (res.skipped.length > 0) {
+    logger.success(`Deleted: ${res.deleted.length}`);
+    logger.warn(`Skipped: ${res.skipped.length} (files in use or permission issues)`);
+    if (opts.verbose) {
+      res.skipped.forEach(s => logger.debug(`  ${s.path} (${s.reason})`));
+    }
+  } else {
+    logger.success(`Deleted: ${res.deleted.length}`);
+  }
+  
   logger.success(`Freed: ${prettyBytes(res.freedBytes)}`);
   maybeCelebrate(res.freedBytes, logger);
 }
