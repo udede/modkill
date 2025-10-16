@@ -6,7 +6,9 @@ describe('ModuleScanner', () => {
     const scanner = new ModuleScanner();
     const res = await scanner.scan({ rootPath: process.cwd(), depth: 1 });
     expect(res).toBeDefined();
-    expect(Array.isArray(res)).toBe(true);
+    expect(res.modules).toBeDefined();
+    expect(Array.isArray(res.modules)).toBe(true);
+    expect(Array.isArray(res.skippedNoPermission)).toBe(true);
   });
 });
 

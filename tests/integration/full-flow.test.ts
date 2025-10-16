@@ -20,10 +20,10 @@ describe('Full flow (dry-run)', () => {
   it('finds node_modules and can dry-run delete', async () => {
     const root = await createFixture();
     const scanner = new ModuleScanner();
-    const modules = await scanner.scan({ rootPath: root, depth: 3 });
-    expect(modules.length).toBeGreaterThan(0);
+    const scanResult = await scanner.scan({ rootPath: root, depth: 3 });
+    expect(scanResult.modules.length).toBeGreaterThan(0);
     const analyzer = new Analyzer();
-    const analyzed = analyzer.analyze(modules, { minAgeDays: 0, minSizeMB: 0 });
+    const analyzed = analyzer.analyze(scanResult.modules, { minAgeDays: 0, minSizeMB: 0 });
     expect(analyzed.length).toBeGreaterThan(0);
     const cleaner = new SafeCleaner();
     const res = await cleaner.delete(analyzed.map((m) => m.path), { dryRun: true });
