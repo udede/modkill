@@ -26,10 +26,10 @@ describe('ModuleScanner - Comprehensive', () => {
     await writeFile(path.join(testDir, 'level1', 'level2', 'node_modules', 'pkg.json'), '{}');
 
     const scanner = new ModuleScanner();
-    const results = await scanner.scan({ rootPath: testDir, depth: 3 });
+    const scanResult = await scanner.scan({ rootPath: testDir, depth: 3 });
 
-    expect(results).toHaveLength(3);
-    expect(results.every(r => r.path.includes('node_modules'))).toBe(true);
+    expect(scanResult.modules).toHaveLength(3);
+    expect(scanResult.modules.every(r => r.path.includes('node_modules'))).toBe(true);
   });
 
   it('calculates sizes correctly', async () => {
@@ -41,10 +41,10 @@ describe('ModuleScanner - Comprehensive', () => {
     await writeFile(path.join(nmPath, 'file2.js'), Buffer.alloc(2048)); // 2KB
     
     const scanner = new ModuleScanner();
-    const results = await scanner.scan({ rootPath: testDir });
+    const scanResult = await scanner.scan({ rootPath: testDir });
 
-    expect(results).toHaveLength(1);
-    expect(results[0].sizeBytes).toBeGreaterThanOrEqual(3072);
+    expect(scanResult.modules).toHaveLength(1);
+    expect(scanResult.modules[0].sizeBytes).toBeGreaterThanOrEqual(3072);
   });
 
   it('detects package.json presence', async () => {
@@ -56,10 +56,10 @@ describe('ModuleScanner - Comprehensive', () => {
     await mkdir(path.join(testDir, 'without-pkg', 'node_modules'), { recursive: true });
 
     const scanner = new ModuleScanner();
-    const results = await scanner.scan({ rootPath: testDir });
+    const scanResult = await scanner.scan({ rootPath: testDir });
 
-    const withPkg = results.find(r => r.path.includes('with-pkg'));
-    const withoutPkg = results.find(r => r.path.includes('without-pkg'));
+    const withPkg = scanResult.modules.find(r => r.path.includes('with-pkg'));
+    const withoutPkg = scanResult.modules.find(r => r.path.includes('without-pkg'));
 
     expect(withPkg?.hasPackageJson).toBe(true);
     expect(withoutPkg?.hasPackageJson).toBe(false);
@@ -74,9 +74,9 @@ describe('ModuleScanner - Comprehensive', () => {
     }
 
     const scanner = new ModuleScanner();
-    const results = await scanner.scan({ rootPath: testDir, depth: 3 });
+    const scanResult = await scanner.scan({ rootPath: testDir, depth: 3 });
 
-    expect(results.length).toBeLessThanOrEqual(3);
+    expect(scanResult.modules.length).toBeLessThanOrEqual(3);
   });
 
   it('excludes system directories', async () => {
@@ -85,10 +85,10 @@ describe('ModuleScanner - Comprehensive', () => {
     await mkdir(path.join(testDir, 'normal', 'node_modules'), { recursive: true });
 
     const scanner = new ModuleScanner();
-    const results = await scanner.scan({ rootPath: testDir });
+    const scanResult = await scanner.scan({ rootPath: testDir });
 
-    expect(results).toHaveLength(1);
-    expect(results[0].path).toContain('normal');
+    expect(scanResult.modules).toHaveLength(1);
+    expect(scanResult.modules[0].path).toContain('normal');
   });
 
   it('handles permission errors gracefully', async () => {
@@ -96,9 +96,10 @@ describe('ModuleScanner - Comprehensive', () => {
     
     const scanner = new ModuleScanner();
     // Should not throw even with invalid paths
-    const results = await scanner.scan({ rootPath: '/root/invalid/path' });
+    const scanResult = await scanner.scan({ rootPath: '/root/invalid/path' });
     
-    expect(results).toEqual([]);
+    expect(scanResult.modules).toEqual([]);
+    expect(scanResult.skippedNoPermission).toEqual([]);
   });
 
   it('does not follow symlinks by default', async () => {
@@ -109,9 +110,9 @@ describe('ModuleScanner - Comprehensive', () => {
     await symlink(path.join(testDir, 'real'), linkPath, 'dir');
 
     const scanner = new ModuleScanner();
-    const results = await scanner.scan({ rootPath: testDir, followSymlinks: false });
+    const scanResult = await scanner.scan({ rootPath: testDir, followSymlinks: false });
 
-    expect(results).toHaveLength(1);
+    expect(scanResult.modules).toHaveLength(1);
   });
 
   it('skips node_modules within node_modules', async () => {
@@ -123,9 +124,9 @@ describe('ModuleScanner - Comprehensive', () => {
     await writeFile(path.join(inner, 'file.js'), 'test');
 
     const scanner = new ModuleScanner();
-    const results = await scanner.scan({ rootPath: testDir });
+    const scanResult = await scanner.scan({ rootPath: testDir });
 
-    expect(results).toHaveLength(1);
-    expect(results[0].path).toBe(outer);
+    expect(scanResult.modules).toHaveLength(1);
+    expect(scanResult.modules[0].path).toBe(outer);
   });
 });

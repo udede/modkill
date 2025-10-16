@@ -1,4 +1,4 @@
-import { readdir, stat } from 'node:fs/promises';
+import { readdir, stat, access, constants } from 'node:fs/promises';
 import path from 'node:path';
 
 export interface ModuleInfo {
@@ -8,11 +8,17 @@ export interface ModuleInfo {
   hasPackageJson: boolean;
 }
 
+export interface ScanResult {
+  modules: ModuleInfo[];
+  skippedNoPermission: string[];
+}
+
 export interface ScanOptions {
   rootPath: string;
   depth?: number;
   excludeGlobs?: string[];
   followSymlinks?: boolean;
+  onProgress?: (currentPath: string, foundCount: number) => void;
 }
 
 const DEFAULT_EXCLUDES = [
@@ -57,11 +63,12 @@ export class ModuleScanner {
     this.followSymlinks = false;
   }
 
-  async scan(options: ScanOptions): Promise<ModuleInfo[]> {
+  async scan(options: ScanOptions): Promise<ScanResult> {
     const depthLimit = options.depth ?? this.maxDepth;
     const results: ModuleInfo[] = [];
-    await this.walk(options.rootPath, 0, depthLimit, results, options.followSymlinks ?? this.followSymlinks);
-    return results;
+    const skippedNoPermission: string[] = [];
+    await this.walk(options.rootPath, 0, depthLimit, results, skippedNoPermission, options.followSymlinks ?? this.followSymlinks, options.onProgress);
+    return { modules: results, skippedNoPermission };
   }
 
   private async walk(
@@ -69,9 +76,16 @@ export class ModuleScanner {
     currentDepth: number,
     depthLimit: number,
     results: ModuleInfo[],
+    skippedNoPermission: string[],
     followSymlinks: boolean,
+    onProgress?: (currentPath: string, foundCount: number) => void,
   ): Promise<void> {
     if (currentDepth > depthLimit) return;
+
+    // Notify progress
+    if (onProgress) {
+      onProgress(currentPath, results.length);
+    }
 
     let entries;
     try {
@@ -94,14 +108,31 @@ export class ModuleScanner {
             const s = await stat(full);
             const sizeBytes = await getDirectorySize(full);
             const hasPackageJson = await this.hasPackageJson(path.dirname(full));
+            
+            // Check write permissions (non-destructive)
+            const canWrite = await this.canWrite(full);
+            if (!canWrite) {
+              skippedNoPermission.push(full);
+              continue;
+            }
+            
             results.push({ path: full, sizeBytes, mtimeMs: s.mtimeMs, hasPackageJson });
           } catch {
             // ignore
           }
           continue; // do not descend into node_modules children
         }
-        await this.walk(full, currentDepth + 1, depthLimit, results, followSymlinks);
+        await this.walk(full, currentDepth + 1, depthLimit, results, skippedNoPermission, followSymlinks, onProgress);
       }
+    }
+  }
+
+  private async canWrite(dirPath: string): Promise<boolean> {
+    try {
+      await access(dirPath, constants.W_OK);
+      return true;
+    } catch {
+      return false;
     }
   }
 

@@ -50,7 +50,7 @@ describe('CLI E2E', () => {
 
     const { stdout, code } = await exec('node', [path.join(projectRoot, 'dist', 'cli.js'), '--current', '--dry-run'], { cwd: proj });
     expect(code).toBe(0);
-    expect(stdout).toMatch(/Deleted:|No node_modules/);
+    expect(stdout).toMatch(/Deleted:|Skipped:|No node_modules/);
   });
 
   it('runs auto mode dry-run', async () => {

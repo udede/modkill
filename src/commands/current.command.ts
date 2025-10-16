@@ -23,6 +23,14 @@ export async function runCurrentCommand(opts: CliOptions & { logger?: Logger }):
 
   const cleaner = new SafeCleaner();
   const res = await cleaner.delete([target], { useTrash: true, dryRun: !!opts.dryRun });
-  logger.success(`Deleted: ${res.deleted.length}, Skipped: ${res.skipped.length}`);
+  
+  if (res.skipped.length > 0) {
+    logger.warn(`Skipped: node_modules cannot be deleted (${res.skipped[0]?.reason})`);
+    if (opts.verbose && res.skipped[0]) {
+      logger.debug(`  ${res.skipped[0].path} (${res.skipped[0].reason})`);
+    }
+  } else {
+    logger.success(`Deleted: ${res.deleted.length}`);
+  }
 }
 
