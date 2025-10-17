@@ -1,6 +1,6 @@
 {
   "name": "@lisandrof/modkill",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "🔪 Murder your node_modules. Free your disk. 10x faster.",
   "keywords": [
     "node_modules",
