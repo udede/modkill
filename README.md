@@ -204,23 +204,26 @@ Fields:
 
 ## ⚡ Performance
 
-| Metric                  | Target | Actual   |
-| ----------------------- | ------ | -------- |
-| Scan 1000 directories   | <2s    | ✅ 1.3s  |
-| Memory usage (any size) | <50MB  | ✅ 35MB  |
-| Parallel scanning       | Yes    | ✅ Ready |
-| Cache support           | Yes    | 🚧 WIP   |
+| Metric              | Result   |
+| ------------------- | -------- |
+| Scan home (277GB)   | 52.7s    |
+| Memory usage (peak) | <50MB    |
+| Single project scan | 0.21s    |
+| Parallel scanning   | ✅ Ready |
 
 ### Benchmarks
 
-```bash
-# Run performance tests
-npm run bench
+Tested on M-series Mac:
 
-# Results on M1 MacBook Pro
-# ✓ Scan home directory (427GB, 89 node_modules): 1.8s
-# ✓ Interactive selection (89 items): 45ms render
-# ✓ Delete 10 folders (5.2GB total): 2.1s
+```bash
+# Scan home directory (277GB, depth 6)
+✓ Found 54 node_modules totaling 18GB in 52.7s
+
+# Scan projects directory
+✓ Found 11 node_modules totaling 4.7GB in 47.9s
+
+# Scan current project
+✓ Found 1 node_modules in 0.21s
 ```
 
 ## 🛠️ Development
