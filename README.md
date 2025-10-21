@@ -1,7 +1,7 @@
 # 🔪 modkill
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/udede/modkill/main/assets/poster.png" alt="modkill logo" width="200" />
+  <img src="https://raw.githubusercontent.com/udede/modkill/main/assets/poster.png" alt="modkill poster" />
 </p>
 
 <p align="center">
