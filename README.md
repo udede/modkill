@@ -1,7 +1,7 @@
 # 🔪 modkill
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/udede/modkill/main/assets/logo.png" alt="modkill logo" width="200" />
+  <img src="https://raw.githubusercontent.com/udede/modkill/main/assets/poster.png" alt="modkill logo" width="200" />
 </p>
 
 <p align="center">
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <b>🚀 Murder your node_modules. Free your disk. 10x faster.</b>
+  <b>🚀 Murder your node_modules. Free your disk. Lightning fast.</b>
 </p>
 
 ## 📸 Demo
@@ -23,7 +23,7 @@
 $ modkill --path ~/Projects --depth 4
 
 ✔ Scan complete: 42 candidate(s)
-Scanning root: /Users/you/Projects
+
 Project (relative path below)                     Size         Age
 ◉ old-project                                   1.98 GB       482d
   old-project/frontend
@@ -46,8 +46,8 @@ Every developer's disk is littered with forgotten `node_modules` folders:
 
 **modkill** solves this with:
 
-- ⚡ **10x faster** scanning using optimized traversal
-- 🧠 **Smart detection** of abandoned projects (age, size, git activity)
+- ⚡ **Fast parallel scanning** using optimized filesystem traversal
+- 🧠 **Smart detection** of abandoned projects by age and size
 - 🛡️ **Safe by default** with dry-run, trash, and restore logs
 - 🎨 **Beautiful UX** with interactive selection and progress indicators
 - 🔧 **Flexible** with JSON output for automation
@@ -106,36 +106,36 @@ modkill --current
 
 ### Options
 
-| Option             | Type    | Default                                | Description                           |
-| ------------------ | ------- | -------------------------------------- | ------------------------------------- |
-| `--path <dir>`     | string  | `.`                                    | Root directory to scan                |
-| `--depth <n>`      | number  | `6`                                    | Max recursion depth                   |
-| `--min-age <days>` | number  | `0`                                    | Only show modules older than N days   |
-| `--min-size <mb>`  | number  | `0`                                    | Only show modules larger than N MB    |
-| `--sort <by>`      | string  | `score` (interactive), `size` (others) | One of: `size`, `age`, `name`, `path` |
-| `--json`           | boolean | `false`                                | Output JSON for scripting             |
-| `--yes`            | boolean | `false`                                | Skip confirmation prompts             |
-| `--help`           | boolean | `false`                                | Show help                             |
+| Option             | Type    | Default | Description                               |
+| ------------------ | ------- | ------- | ----------------------------------------- |
+| `--path <dir>`     | string  | `.`     | Root directory to scan                    |
+| `--depth <n>`      | number  | `6`     | Max recursion depth                       |
+| `--min-age <days>` | number  | `0`     | Only show modules older than N days       |
+| `--min-size <mb>`  | number  | `0`     | Only show modules larger than N MB        |
+| `--sort <by>`      | string  | `size`  | One of: `size`, `age`, `name`, `path`     |
+| `--json`           | boolean | `false` | Output JSON for scripting                 |
+| `--yes`            | boolean | `false` | Skip confirmation (interactive mode only) |
+| `--help`           | boolean | `false` | Show help                                 |
 
 ### Advanced Examples
 
 ```bash
-# Scan specific directory with filters
+# Auto-clean with age and size filters
 modkill --path ~/Projects --min-age 60 --min-size 100
 
-# Auto-clean with custom threshold
+# Auto-clean with custom thresholds
 modkill --auto --min-age 90 --min-size 200
 
 # Generate JSON report for analysis
 modkill --dry-run --json --path ~ > report.json
 
-# Clean without confirmation
-modkill --current --yes
+# Clean current directory (no confirmation by design)
+modkill --current
 
-# Free large modules first (interactive)
-modkill --path ~ --min-size 200
+# Auto-clean only large modules (>200MB)
+modkill --min-size 200
 
-# Focus on abandoned projects (oldest first)
+# Focus on abandoned projects (oldest first, interactive)
 modkill --path ~ --sort age
 
 # Deep scan of an external drive
@@ -156,26 +156,26 @@ modkill --path /Volumes/Backup --depth 10
 
 ### Selection Interface
 
-- Space: Toggle selection
-- A: Select/deselect all
+- Space: Select/deselect item
+- A: Toggle all
 - I: Invert selection
 - Enter: Proceed with deletion
 - Ctrl+C: Cancel
 
 ### Safety Features
 
-- ✅ Dry-run mode by default for preview
+- ✅ Interactive preview with confirmation prompt
 - 🗑️ Moves to OS trash (recoverable)
-- 📝 Creates restore log at `/tmp/modkill-restore-[timestamp].log`
-- ⚠️ Confirmation prompt before deletion
+- 📝 Creates restore log in system temp directory (`modkill-restore-[timestamp].log`)
+- ⚠️ Dry-run mode available for risk-free preview
 - 🚫 Skips system directories automatically
 
 ### How it decides
 
 - Filter: applies `--min-age` and `--min-size` when provided
-- Order (interactive default): combined weighting `sizeGB^0.7 × ageDays^0.3` (separate from JSON "score"). Use `--sort` to override
-- Order (auto / dry-run default): `size` (use `--sort` to override)
-- Pre-selection: items with `ageDays > 30`
+- Sorting: default by `size` (use `--sort age|name|path` to override)
+- Pre-selection (interactive): auto-selects items older than 30 days
+- Scoring: weighted formula `ageScore×0.5 + sizeScore×0.4 + orphanBonus×0.1`
 - Colors: 🟢 ≤30d, 🟡 31–60d, 🔴 >60d
 
 ## 📊 JSON Output Schema
@@ -200,7 +200,7 @@ Fields:
 - `mtimeMs`: Last modified timestamp (milliseconds)
 - `hasPackageJson`: Whether parent has package.json
 - `ageDays`: Days since last modification
-- `score`: Heuristic priority (0–100) used in analysis output; not the same as the interactive ordering function
+- `score`: Heuristic priority score (weighted by age, size, and orphan status)
 
 ## ⚡ Performance
 
@@ -328,15 +328,15 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ## 🏆 Comparison
 
-| Feature         | modkill        | npkill     | node-prune |
-| --------------- | -------------- | ---------- | ---------- |
-| Speed           | ⚡⚡⚡⚡⚡     | ⚡⚡⚡     | ⚡⚡       |
-| Interactive UI  | ✅ Beautiful   | ✅ Basic   | ❌         |
-| Safe deletion   | ✅ Trash + log | ⚠️ rm only | ⚠️ rm only |
-| JSON output     | ✅             | ❌         | ❌         |
-| Custom filters  | ✅ Age, size   | ⚠️ Limited | ❌         |
-| Monorepo aware  | ✅             | ⚠️         | ❌         |
-| Windows support | ✅             | ✅         | ⚠️         |
+| Feature         | modkill             | npkill       | node-prune   |
+| --------------- | ------------------- | ------------ | ------------ |
+| Speed           | ⚡⚡⚡⚡⚡ Parallel | ⚡⚡⚡       | ⚡⚡         |
+| Interactive UI  | ✅ Rich & colorful  | ✅ Basic     | ❌           |
+| Safe deletion   | ✅ Trash + log      | ⚠️ Permanent | ⚠️ Permanent |
+| JSON output     | ✅                  | ❌           | ❌           |
+| Custom filters  | ✅ Age, size        | ⚠️ Limited   | ❌           |
+| Monorepo aware  | ✅ Depth control    | ⚠️           | ❌           |
+| Windows support | ✅                  | ✅           | ⚠️           |
 
 ## 🐛 Troubleshooting
 
@@ -355,8 +355,8 @@ sudo modkill --path /usr/local
 # Reduce depth for faster scans
 modkill --depth 3
 
-# Exclude large directories
-modkill --min-size 50
+# Auto-clean only large folders (>100MB) for faster cleanup
+modkill --min-size 100
 ```
 
 **Not finding modules**
