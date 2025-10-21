@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+### Patch Changes
+
+- a2b7366: Users can expect improved documentation that enhances the accuracy and consistency of the project's information.
+
 ## 0.2.0
 
 ### Minor Changes
