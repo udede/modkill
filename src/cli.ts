@@ -4,6 +4,7 @@ import { runInteractiveCommand } from './commands/interactive.command';
 import { runAutoCommand } from './commands/auto.command';
 import { runDryRunCommand } from './commands/dryrun.command';
 import { runCurrentCommand } from './commands/current.command';
+import { VERSION } from './version';
 
 export interface CliOptions {
   auto?: boolean;
@@ -40,7 +41,7 @@ export async function runCli(argv: string[] = process.argv): Promise<void> {
   program
     .name('modkill')
     .description('Find and remove node_modules to free disk space safely')
-    .version('0.1.0')
+    .version(VERSION)
     .option('--auto', 'Auto-clean old modules (>30 days)')
     .option('--dry-run', 'Preview without deleting')
     .option('--current', 'Clean current directory only')
