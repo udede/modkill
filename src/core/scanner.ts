@@ -63,7 +63,12 @@ export class ModuleScanner {
     let entries;
     try {
       entries = await readdir(currentPath, { withFileTypes: true });
-    } catch {
+    } catch (error) {
+      // Expected: permission denied, path not found, or other FS errors
+      // These are normal during filesystem traversal and can be safely ignored
+      if (process.env.DEBUG) {
+        console.error(`[scanner] Cannot read directory ${currentPath}:`, error);
+      }
       return;
     }
 
@@ -90,8 +95,12 @@ export class ModuleScanner {
             }
             
             results.push({ path: full, sizeBytes, mtimeMs: s.mtimeMs, hasPackageJson });
-          } catch {
-            // ignore
+          } catch (error) {
+            // Expected: stat/size calculation failures (permissions, symlinks, corruption)
+            // These node_modules are skipped but scan continues
+            if (process.env.DEBUG) {
+              console.error(`[scanner] Cannot process node_modules at ${full}:`, error);
+            }
           }
           continue; // do not descend into node_modules children
         }
@@ -105,6 +114,7 @@ export class ModuleScanner {
       await access(dirPath, constants.W_OK);
       return true;
     } catch {
+      // Expected: permission check failures are normal and indicate read-only dirs
       return false;
     }
   }
@@ -114,6 +124,7 @@ export class ModuleScanner {
       await stat(path.join(dirPath, 'package.json'));
       return true;
     } catch {
+      // Expected: package.json may not exist (orphan node_modules)
       return false;
     }
   }

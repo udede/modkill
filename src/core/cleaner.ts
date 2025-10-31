@@ -64,8 +64,12 @@ export class SafeCleaner {
     const content = deleted.map((p) => `DELETED\t${p}`).concat(skipped.map((s) => `SKIPPED\t${s.path}\t(${s.reason})`)).join('\n');
     try {
       await writeFile(restoreLogPath, content, 'utf8');
-    } catch {
-      // ignore log errors
+    } catch (error) {
+      // Expected: log file write failures (disk full, temp dir permissions)
+      // Non-critical: deletion succeeded even if log fails
+      if (process.env.DEBUG) {
+        console.error(`[cleaner] Cannot write restore log to ${restoreLogPath}:`, error);
+      }
     }
 
     return { success: true, freedBytes, deleted, skipped, restoreLogPath };

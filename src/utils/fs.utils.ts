@@ -15,11 +15,13 @@ export async function calculateDirectorySize(dirPath: string): Promise<number> {
           total += await calculateDirectorySize(full);
         }
       } catch {
-        // skip
+        // Expected: stat failures for individual files (permissions, broken symlinks)
+        // Skip and continue calculating size of accessible files
       }
     }
   } catch {
-    // skip
+    // Expected: directory read failure (permissions, deleted during scan)
+    // Return 0 or partial total accumulated so far
   }
   return total;
 }
