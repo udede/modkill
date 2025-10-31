@@ -1,5 +1,6 @@
 import { readdir, stat, access, constants } from 'node:fs/promises';
 import path from 'node:path';
+import { minimatch } from 'minimatch';
 import { DEFAULT_EXCLUDES, DEFAULT_MAX_SCAN_DEPTH } from '../constants/defaults';
 import { calculateDirectorySize } from '../utils/fs.utils';
 
@@ -23,8 +24,22 @@ export interface ScanOptions {
   onProgress?: (currentPath: string, foundCount: number) => void;
 }
 
-function shouldExclude(name: string): boolean {
-  return DEFAULT_EXCLUDES.includes(name);
+function shouldExclude(name: string, customPatterns?: string[]): boolean {
+  // Always exclude default patterns
+  if (DEFAULT_EXCLUDES.includes(name)) {
+    return true;
+  }
+
+  // Check custom patterns if provided
+  if (customPatterns && customPatterns.length > 0) {
+    for (const pattern of customPatterns) {
+      if (minimatch(name, pattern, { dot: true })) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 export class ModuleScanner {
@@ -40,7 +55,16 @@ export class ModuleScanner {
     const depthLimit = options.depth ?? this.maxDepth;
     const results: ModuleInfo[] = [];
     const skippedNoPermission: string[] = [];
-    await this.walk(options.rootPath, 0, depthLimit, results, skippedNoPermission, options.followSymlinks ?? this.followSymlinks, options.onProgress);
+    await this.walk(
+      options.rootPath,
+      0,
+      depthLimit,
+      results,
+      skippedNoPermission,
+      options.followSymlinks ?? this.followSymlinks,
+      options.excludeGlobs,
+      options.onProgress,
+    );
     return { modules: results, skippedNoPermission };
   }
 
@@ -51,6 +75,7 @@ export class ModuleScanner {
     results: ModuleInfo[],
     skippedNoPermission: string[],
     followSymlinks: boolean,
+    excludeGlobs?: string[],
     onProgress?: (currentPath: string, foundCount: number) => void,
   ): Promise<void> {
     if (currentDepth > depthLimit) return;
@@ -75,7 +100,7 @@ export class ModuleScanner {
 
     for (const entry of entries) {
       const full = path.join(currentPath, entry.name);
-      if (shouldExclude(entry.name)) continue;
+      if (shouldExclude(entry.name, excludeGlobs)) continue;
 
       if (entry.isSymbolicLink()) {
         if (!followSymlinks) continue;
@@ -106,7 +131,7 @@ export class ModuleScanner {
           }
           continue; // do not descend into node_modules children
         }
-        await this.walk(full, currentDepth + 1, depthLimit, results, skippedNoPermission, followSymlinks, onProgress);
+        await this.walk(full, currentDepth + 1, depthLimit, results, skippedNoPermission, followSymlinks, excludeGlobs, onProgress);
       }
     }
   }

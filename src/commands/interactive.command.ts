@@ -38,7 +38,11 @@ export async function runInteractiveCommand(opts: CliOptions & { logger?: Logger
   const logger = opts.logger ?? createLogger({ level: opts.verbose ? 'debug' : 'info', json: !!opts.json });
   const root = opts.path || process.cwd();
   const scanner = new ModuleScanner();
-  const scanOpts = { rootPath: root, ...(opts.depth !== undefined ? { depth: opts.depth } : {}) };
+  const scanOpts = {
+    rootPath: root,
+    ...(opts.depth !== undefined ? { depth: opts.depth } : {}),
+    ...(opts.exclude ? { excludeGlobs: opts.exclude } : {}),
+  };
 
   const scanProgress = logger.spinner(`Scanning ${root}...`);
   if (!opts.json) scanProgress.start();
