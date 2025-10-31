@@ -1,5 +1,7 @@
 import { readdir, stat, access, constants } from 'node:fs/promises';
 import path from 'node:path';
+import { DEFAULT_EXCLUDES, DEFAULT_MAX_SCAN_DEPTH } from '../constants/defaults';
+import { calculateDirectorySize } from '../utils/fs.utils';
 
 export interface ModuleInfo {
   path: string;
@@ -21,37 +23,8 @@ export interface ScanOptions {
   onProgress?: (currentPath: string, foundCount: number) => void;
 }
 
-const DEFAULT_EXCLUDES = [
-  '.git',
-  '.svn',
-  '.hg',
-  'Library',
-  'Windows',
-  'System32',
-  'AppData',
-];
-
 function shouldExclude(name: string): boolean {
   return DEFAULT_EXCLUDES.includes(name);
-}
-
-async function getDirectorySize(dirPath: string): Promise<number> {
-  let total = 0;
-  const entries = await readdir(dirPath, { withFileTypes: true });
-  for (const entry of entries) {
-    const full = path.join(dirPath, entry.name);
-    try {
-      if (entry.isFile()) {
-        const s = await stat(full);
-        total += s.size;
-      } else if (entry.isDirectory()) {
-        total += await getDirectorySize(full);
-      }
-    } catch {
-      // Skip unreadable entries
-    }
-  }
-  return total;
 }
 
 export class ModuleScanner {
@@ -59,7 +32,7 @@ export class ModuleScanner {
   private readonly followSymlinks: boolean;
 
   constructor() {
-    this.maxDepth = 6;
+    this.maxDepth = DEFAULT_MAX_SCAN_DEPTH;
     this.followSymlinks = false;
   }
 
@@ -106,7 +79,7 @@ export class ModuleScanner {
         if (entry.name === 'node_modules') {
           try {
             const s = await stat(full);
-            const sizeBytes = await getDirectorySize(full);
+            const sizeBytes = await calculateDirectorySize(full);
             const hasPackageJson = await this.hasPackageJson(path.dirname(full));
             
             // Check write permissions (non-destructive)

@@ -1,4 +1,6 @@
 import path from 'node:path';
+import { MS_PER_DAY, BYTES_PER_MB } from '../constants/units';
+import { SCORING_WEIGHTS, ORPHAN_BONUS_POINTS } from '../constants/scoring';
 
 export type SortBy = 'size' | 'age' | 'name' | 'path';
 
@@ -26,15 +28,15 @@ export class Analyzer {
 
     const scored = modules
       .map((m) => {
-        const ageDays = Math.max(0, (now - m.mtimeMs) / (1000 * 60 * 60 * 24));
-        const sizeMB = m.sizeBytes / (1024 * 1024);
-        const orphanBonus = m.hasPackageJson ? 0 : 10; // Prefer cleaning orphans
+        const ageDays = Math.max(0, (now - m.mtimeMs) / MS_PER_DAY);
+        const sizeMB = m.sizeBytes / BYTES_PER_MB;
+        const orphanBonus = m.hasPackageJson ? 0 : ORPHAN_BONUS_POINTS;
         const ageScore = Math.min(100, ageDays);
         const sizeScore = Math.min(100, sizeMB / 10);
-        const score = ageScore * 0.5 + sizeScore * 0.4 + orphanBonus * 0.1;
+        const score = ageScore * SCORING_WEIGHTS.AGE + sizeScore * SCORING_WEIGHTS.SIZE + orphanBonus * SCORING_WEIGHTS.ORPHAN;
         return { ...m, ageDays, score } as AnalyzedModule;
       })
-      .filter((m) => m.ageDays >= minAgeDays && m.sizeBytes >= minSizeMB * 1024 * 1024)
+      .filter((m) => m.ageDays >= minAgeDays && m.sizeBytes >= minSizeMB * BYTES_PER_MB)
       .filter((m) => (opts.includeOrphans === false ? m.hasPackageJson : true));
 
     const sortBy = opts.sortBy ?? 'size';
