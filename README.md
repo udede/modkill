@@ -8,7 +8,7 @@
   <a href="https://www.npmjs.com/package/@lisandrof/modkill"><img src="https://img.shields.io/npm/v/%40lisandrof%2Fmodkill?style=flat-square&logo=npm" alt="npm version"></a>
   <a href="https://www.npmjs.com/package/@lisandrof/modkill"><img src="https://img.shields.io/npm/dm/%40lisandrof%2Fmodkill?style=flat-square&logo=npm" alt="downloads"></a>
   <a href="https://github.com/udede/modkill/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/udede/modkill/ci.yml?branch=main&style=flat-square&logo=github&label=tests" alt="tests"></a>
-  <a href="https://github.com/udede/modkill"><img src="https://img.shields.io/badge/coverage-73%25-green?style=flat-square" alt="coverage"></a>
+  <a href="https://github.com/udede/modkill"><img src="https://img.shields.io/badge/coverage-58%25-orange?style=flat-square" alt="coverage"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="license"></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square&logo=node.js" alt="node"></a>
 </p>
@@ -46,7 +46,7 @@ Every developer's disk is littered with forgotten `node_modules` folders:
 
 **modkill** solves this with:
 
-- ⚡ **Fast parallel scanning** using optimized filesystem traversal
+- ⚡ **Fast scanning** using optimized filesystem traversal
 - 🧠 **Smart detection** of abandoned projects by age and size
 - 🛡️ **Safe by default** with dry-run, trash, and restore logs
 - 🎨 **Beautiful UX** with interactive selection and progress indicators
@@ -209,7 +209,6 @@ Fields:
 | Scan home (277GB)   | 52.7s    |
 | Memory usage (peak) | <50MB    |
 | Single project scan | 0.21s    |
-| Parallel scanning   | ✅ Ready |
 
 ### Benchmarks
 
@@ -328,9 +327,9 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ## 🏆 Comparison
 
-| Feature         | modkill             | npkill       | node-prune   |
-| --------------- | ------------------- | ------------ | ------------ |
-| Speed           | ⚡⚡⚡⚡⚡ Parallel | ⚡⚡⚡       | ⚡⚡         |
+| Feature         | modkill                | npkill       | node-prune   |
+| --------------- | ---------------------- | ------------ | ------------ |
+| Speed           | ⚡⚡⚡⚡⚡ Optimized | ⚡⚡⚡       | ⚡⚡         |
 | Interactive UI  | ✅ Rich & colorful  | ✅ Basic     | ❌           |
 | Safe deletion   | ✅ Trash + log      | ⚠️ Permanent | ⚠️ Permanent |
 | JSON output     | ✅                  | ❌           | ❌           |
