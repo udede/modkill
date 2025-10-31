@@ -7,19 +7,17 @@ const version = packageJson.version;
 
 export default defineConfig((options) => ({
   entry: {
-    cli: 'src/cli.ts',
+    cli: 'src/bin.ts',
     index: 'src/index.ts',
   },
-  format: ['esm', 'cjs'],
+  format: ['esm'],
   dts: true,
   sourcemap: true,
   minify: !options.watch,
   clean: true,
   target: 'node20',
   platform: 'node',
-  banner: {
-    js: '#!/usr/bin/env node',
-  },
+  shims: true,
   // Inject version at build time
   define: {
     '__VERSION__': JSON.stringify(version),

@@ -24,13 +24,3 @@ export async function calculateDirectorySize(dirPath: string): Promise<number> {
   return total;
 }
 
-export function isSystemPath(p: string): boolean {
-  const lower = p.toLowerCase();
-  return (
-    lower.includes('/system') ||
-    lower.includes('/windows') ||
-    lower.includes('/library') ||
-    lower.includes('program files')
-  );
-}
-
