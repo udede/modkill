@@ -68,6 +68,7 @@ export class SafeCleaner {
       // Expected: log file write failures (disk full, temp dir permissions)
       // Non-critical: deletion succeeded even if log fails
       if (process.env.DEBUG) {
+        // eslint-disable-next-line no-console
         console.error(`[cleaner] Cannot write restore log to ${restoreLogPath}:`, error);
       }
     }

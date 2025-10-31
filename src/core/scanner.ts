@@ -67,6 +67,7 @@ export class ModuleScanner {
       // Expected: permission denied, path not found, or other FS errors
       // These are normal during filesystem traversal and can be safely ignored
       if (process.env.DEBUG) {
+        // eslint-disable-next-line no-console
         console.error(`[scanner] Cannot read directory ${currentPath}:`, error);
       }
       return;
@@ -99,6 +100,7 @@ export class ModuleScanner {
             // Expected: stat/size calculation failures (permissions, symlinks, corruption)
             // These node_modules are skipped but scan continues
             if (process.env.DEBUG) {
+              // eslint-disable-next-line no-console
               console.error(`[scanner] Cannot process node_modules at ${full}:`, error);
             }
           }
