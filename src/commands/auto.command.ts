@@ -5,6 +5,7 @@ import type { CliOptions } from '../cli';
 import type { Logger } from '../ui/logger';
 import { createLogger } from '../ui/logger';
 import type { SortBy } from '../core/analyzer';
+import { DEFAULT_MIN_AGE_DAYS } from '../constants/defaults';
 
 export async function runAutoCommand(opts: CliOptions & { logger?: Logger }): Promise<void> {
   const logger = opts.logger ?? createLogger({ level: opts.verbose ? 'debug' : 'info', json: !!opts.json });
@@ -32,7 +33,7 @@ export async function runAutoCommand(opts: CliOptions & { logger?: Logger }): Pr
   const analyzer = new Analyzer();
   const sortBy: SortBy = (opts.sort ?? 'size');
   const analyzeOpts = {
-    ...(opts.minAge !== undefined ? { minAgeDays: opts.minAge } : { minAgeDays: 30 }),
+    ...(opts.minAge !== undefined ? { minAgeDays: opts.minAge } : { minAgeDays: DEFAULT_MIN_AGE_DAYS }),
     ...(opts.minSize !== undefined ? { minSizeMB: opts.minSize } : {}),
     sortBy,
   };

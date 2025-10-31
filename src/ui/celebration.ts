@@ -1,7 +1,8 @@
 import type { Logger } from './logger';
+import { BYTES_PER_GB } from '../constants/units';
 
 export function maybeCelebrate(bytesFreed: number, logger?: Logger): void {
-  const TEN_GB = 10 * 1024 * 1024 * 1024;
+  const TEN_GB = 10 * BYTES_PER_GB;
   if (bytesFreed <= TEN_GB) return;
   const art = `
 ┏┓┳┓┏┓┏┓┏┳┓╻╻╻

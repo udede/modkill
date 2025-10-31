@@ -20,15 +20,18 @@ import { maybeCelebrate } from '../ui/celebration';
 import type { SortBy } from '../core/analyzer';
 import type { Logger } from '../ui/logger';
 import { createLogger } from '../ui/logger';
+import { BYTES_PER_GB } from '../constants/units';
+import { AGE_WARNING_THRESHOLD_DAYS, AGE_ERROR_THRESHOLD_DAYS, DEFAULT_INTERACTIVE_PAGE_SIZE } from '../constants/defaults';
+import { UI_LAYOUT } from '../constants/ui';
+import { INTERACTIVE_SCORE_EXPONENTS } from '../constants/scoring';
 
 // padding helpers removed (replaced by logger.tableHeader/tableRow)
 
 // Combined score used as default ordering in interactive mode
 function computeScore(sizeBytes: number, ageDays: number): number {
-  const sizeGB = Math.max(sizeBytes / (1024 * 1024 * 1024), 0.001);
+  const sizeGB = Math.max(sizeBytes / BYTES_PER_GB, 0.001);
   const age = Math.max(ageDays, 1);
-  // Heavier weight on size, some influence from age
-  return Math.pow(sizeGB, 0.7) * Math.pow(age, 0.3);
+  return Math.pow(sizeGB, INTERACTIVE_SCORE_EXPONENTS.SIZE) * Math.pow(age, INTERACTIVE_SCORE_EXPONENTS.AGE);
 }
 
 export async function runInteractiveCommand(opts: CliOptions & { logger?: Logger }): Promise<void> {
@@ -91,13 +94,13 @@ export async function runInteractiveCommand(opts: CliOptions & { logger?: Logger
   }
 
   // Static compact table layout (stable rendering)
-  const columns = process.stdout.columns || 120;
-  const indent = 2;
-  const sizeCol = 12;
-  const ageCol = 6; // e.g., 16mo, 4d
-  const gap = 3;
-  const slack = 8; // headroom to prevent wrapping
-  const nameCol = Math.max(20, columns - sizeCol - ageCol - gap * 2 - indent - slack);
+  const columns = process.stdout.columns || UI_LAYOUT.DEFAULT_COLUMNS;
+  const indent = UI_LAYOUT.TABLE_INDENT;
+  const sizeCol = UI_LAYOUT.SIZE_COLUMN_WIDTH;
+  const ageCol = UI_LAYOUT.AGE_COLUMN_WIDTH;
+  const gap = UI_LAYOUT.COLUMN_GAP;
+  const slack = UI_LAYOUT.SLACK_SPACE;
+  const nameCol = Math.max(UI_LAYOUT.MIN_NAME_COLUMN_WIDTH, columns - sizeCol - ageCol - gap * 2 - indent - slack);
 
   // Header string aligned with our own padding to match choice rows
   const header = logger.tableHeader([
@@ -110,10 +113,10 @@ export async function runInteractiveCommand(opts: CliOptions & { logger?: Logger
     const projectDir = path.basename(path.dirname(m.path));
     const rel = path.relative(root, path.dirname(m.path)) || '.';
     const size = prettyBytes(m.sizeBytes);
-    const ageStr = m.ageDays >= 30
-      ? (m.ageDays >= 60 ? `${Math.floor(m.ageDays / 30)}mo` : `${Math.floor(m.ageDays)}d`)
+    const ageStr = m.ageDays >= AGE_WARNING_THRESHOLD_DAYS
+      ? (m.ageDays >= AGE_ERROR_THRESHOLD_DAYS ? `${Math.floor(m.ageDays / 30)}mo` : `${Math.floor(m.ageDays)}d`)
       : `${Math.max(0, Math.floor(m.ageDays))}d`;
-    const color = m.ageDays > 60 ? logger.color.err : m.ageDays > 30 ? logger.color.warn : logger.color.ok;
+    const color = m.ageDays > AGE_ERROR_THRESHOLD_DAYS ? logger.color.err : m.ageDays > AGE_WARNING_THRESHOLD_DAYS ? logger.color.warn : logger.color.ok;
 
     const row = logger.tableRow([
       { text: color(projectDir), width: nameCol, align: 'left' },
@@ -126,7 +129,7 @@ export async function runInteractiveCommand(opts: CliOptions & { logger?: Logger
       name: `${row}\n${subtitle}`,
       value: m.path,
       short: projectDir,
-      checked: m.ageDays > 30,
+      checked: m.ageDays > AGE_WARNING_THRESHOLD_DAYS,
     };
   });
 
@@ -158,7 +161,7 @@ export async function runInteractiveCommand(opts: CliOptions & { logger?: Logger
       type: 'checkbox',
       name: 'selected',
       message: '\u200B',
-      pageSize: 18,
+      pageSize: DEFAULT_INTERACTIVE_PAGE_SIZE,
       choices,
       loop: false,
       instructions: false,

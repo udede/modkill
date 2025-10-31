@@ -3,6 +3,7 @@ import path from 'node:path';
 import os from 'node:os';
 import trash from 'trash';
 import { calculateDirectorySize } from '../utils/fs.utils';
+import { RESTORE_LOG_PREFIX, RESTORE_LOG_EXTENSION } from '../constants/files';
 
 export interface DeleteOptions {
   dryRun?: boolean;
@@ -29,7 +30,7 @@ export class SafeCleaner {
   async delete(paths: string[], options: DeleteOptions = {}): Promise<DeleteResult> {
     const useTrash = options.useTrash !== false; // default true
     const dryRun = options.dryRun === true;
-    const restoreLogPath = options.restoreLogPath ?? path.join(os.tmpdir(), `modkill-restore-${Date.now()}.log`);
+    const restoreLogPath = options.restoreLogPath ?? path.join(os.tmpdir(), `${RESTORE_LOG_PREFIX}-${Date.now()}${RESTORE_LOG_EXTENSION}`);
 
     const deleted: string[] = [];
     const skipped: SkippedItem[] = [];

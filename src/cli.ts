@@ -5,6 +5,7 @@ import { runAutoCommand } from './commands/auto.command';
 import { runDryRunCommand } from './commands/dryrun.command';
 import { runCurrentCommand } from './commands/current.command';
 import { VERSION } from './version';
+import { DEFAULT_MAX_SCAN_DEPTH, DEFAULT_MIN_AGE_DAYS } from './constants/defaults';
 
 export interface CliOptions {
   auto?: boolean;
@@ -42,7 +43,7 @@ export async function runCli(argv: string[] = process.argv): Promise<void> {
     .name('modkill')
     .description('Find and remove node_modules to free disk space safely')
     .version(VERSION)
-    .option('--auto', 'Auto-clean old modules (>30 days)')
+    .option('--auto', `Auto-clean old modules (default: >${DEFAULT_MIN_AGE_DAYS} days, configurable with --min-age)`)
     .option('--dry-run', 'Preview without deleting')
     .option('--current', 'Clean current directory only')
     .option('--min-age <days>', 'Minimum age in days', (v) => Number(v))
@@ -50,7 +51,7 @@ export async function runCli(argv: string[] = process.argv): Promise<void> {
     .option('--sort <field>', 'Sort by size|age|name|path', 'size')
     .option('--json', 'Output JSON for scripting')
     .option('--yes', 'Assume yes for prompts')
-    .option('--depth <n>', 'Maximum scan depth', (v) => Number(v), 6)
+    .option('--depth <n>', 'Maximum scan depth', (v) => Number(v), DEFAULT_MAX_SCAN_DEPTH)
     .option('--path <dir>', 'Root path to scan (defaults to CWD)')
     .option('--verbose', 'Verbose logging');
 
@@ -79,10 +80,3 @@ export async function runCli(argv: string[] = process.argv): Promise<void> {
 
   await runInteractiveCommand({ ...opts, logger });
 }
-
- 
-runCli().catch((err) => {
-  const logger = createLogger({ level: 'error' });
-  logger.error(String(err?.message || err));
-  process.exitCode = 1;
-});
